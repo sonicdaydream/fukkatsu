@@ -90,7 +90,7 @@ body{background:#000014;color:#fff;font-family:'Noto Serif JP','MS Mincho',serif
 .reg-banner{background:#001830;border:1px solid #304060;padding:6px 10px;font-size:12px;color:#a0c0a0;margin-bottom:6px}
 /* 魔法陣 */
 @keyframes rotateMagic{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-.magic-circle-wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:280px;height:280px;pointer-events:none;z-index:0}
+.magic-circle-wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(440px,95vw);height:min(440px,95vw);pointer-events:none;z-index:0}
 .magic-circle-wrap svg{width:100%;height:100%;animation:rotateMagic 60s linear infinite}
 /* 結果テキスト */
 .result-win,.result-lose{font-family:'Cinzel Decorative',serif}
@@ -119,7 +119,7 @@ body{background:#000014;color:#fff;font-family:'Noto Serif JP','MS Mincho',serif
 <div id="s-password" class="screen">
   <div class="w" style="overflow:hidden">
     <div class="magic-circle-wrap">
-      <svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" opacity="0.11">
+      <svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" opacity="0.25">
         <g stroke="#c8a000" fill="none">
           <circle cx="150" cy="150" r="140" stroke-width="1.5"/>
           <circle cx="150" cy="150" r="112" stroke-width="0.8"/>
