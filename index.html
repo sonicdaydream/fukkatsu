@@ -242,7 +242,16 @@ body{background:#000014;color:#fff;font-family:'DotGothic16','MS Gothic',monospa
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// ======================================================
+// Supabase クライアント
+// ======================================================
+const sbClient=supabase.createClient(
+  'https://bjnwxdqhknntlirhxqsg.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqbnd4ZHFoa25udGxpcmh4cXNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4Nzg1NDQsImV4cCI6MjA4ODQ1NDU0NH0.JJ4mI6HK5Jd4xuzKOyPiM9xo0emu9jSfDmyHXL-MxcM'
+);
+
 // ======================================================
 // データ定義
 // ======================================================
@@ -935,9 +944,36 @@ function floatDmg(side,val,type){
 // ======================================================
 // ランキング
 // ======================================================
-// ランキング機能は後でFirebaseで実装予定（現在は無効化）
-async function loadPool(){ return []; }
-async function savePool(pool){ return; }
+// ======================================================
+// Supabase ランキング
+// ======================================================
+async function loadPool(){
+  try{
+    const{data,error}=await sbClient.from('fukkatsu_characters').select('*');
+    if(error){console.error('loadPool:',error);return[];}
+    return(data||[]).map(r=>({
+      pw:r.pw, dn:r.display_name, cls:r.cls, clsCol:r.cls_col,
+      lv:r.lv, mhp:r.mhp, atk:r.atk, def:r.def, mgk:r.mgk,
+      wpn:r.wpn, arm:r.arm,
+      skills:r.skills||[], party:r.party||[],
+      wins:r.wins||0, losses:r.losses||0, battles:r.battles||0,
+      streak:r.streak||0, maxStreak:r.max_streak||0,
+    }));
+  }catch(e){console.error('loadPool:',e);return[];}
+}
+async function savePool(pool){
+  if(!pool||!pool.length)return;
+  const rows=pool.map(c=>({
+    pw:c.pw, display_name:c.dn, cls:c.cls, cls_col:c.clsCol,
+    lv:c.lv, mhp:c.mhp, atk:c.atk, def:c.def, mgk:c.mgk,
+    wpn:c.wpn, arm:c.arm,
+    skills:c.skills||[], party:c.party||[],
+    wins:c.wins||0, losses:c.losses||0, battles:c.battles||0,
+    streak:c.streak||0, max_streak:c.maxStreak||0,
+  }));
+  const{error}=await sbClient.from('fukkatsu_characters').upsert(rows,{onConflict:'pw'});
+  if(error)console.error('savePool:',error);
+}
 
 let curTab='battles';
 async function renderRanking(tab){
