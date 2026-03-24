@@ -213,6 +213,7 @@ body{background:#000014;color:#fff;font-family:'DotGothic16','MS Gothic',monospa
 <div id="s-result" class="screen">
   <div class="w">
     <div id="res-title"></div>
+    <div id="res-sprite" style="text-align:center;margin:4px 0"></div>
     <div id="res-body"></div>
   </div>
   <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
@@ -401,6 +402,7 @@ document.getElementById('pw-inp').addEventListener('keydown',e=>{if(e.key==='Ent
 
 function renderMyChar(){
   document.getElementById('mychar-display').innerHTML=buildCharCard(myChar,null,false);
+  insertSpriteIntoCard(document.getElementById('mychar-display'),myChar.seed,myChar.cls.c,64);
   document.getElementById('reg-ok').style.display='none';
   document.getElementById('reg-name').value='';
 }
@@ -503,6 +505,8 @@ async function findOpponent(){
     // VS画面更新
     document.getElementById('vs-my').innerHTML=buildCharCard(myChar,myDisplayName||myChar.cls.n,true);
     document.getElementById('vs-opp').innerHTML=buildSerCard(oppData,'right');
+    insertSpriteIntoCard(document.getElementById('vs-my'),myChar.seed,myChar.cls.c,64);
+    insertSpriteIntoCard(document.getElementById('vs-opp'),oppChar.seed,oppChar.cls.c,64);
     go('vs');
   }catch(e){
     console.error(e);
@@ -511,6 +515,8 @@ async function findOpponent(){
     oppChar=dc;oppData={...serChar(dc,'謎の旅人'),pw:'test'};
     document.getElementById('vs-my').innerHTML=buildCharCard(myChar,myDisplayName||myChar.cls.n,true);
     document.getElementById('vs-opp').innerHTML=buildSerCard(oppData,'right');
+    insertSpriteIntoCard(document.getElementById('vs-my'),myChar.seed,myChar.cls.c,64);
+    insertSpriteIntoCard(document.getElementById('vs-opp'),oppChar.seed,oppChar.cls.c,64);
     go('vs');
   }
 }
@@ -856,13 +862,18 @@ function showResult(won){
 
   const oppName=oppData.dn||oppData.cls;
   let s=`<div class="rstat">`;
-  s+=`<div><span class="rl">あなたの呪文</span><span class="rv">${curPw}</span></div>`;
+  s+=`<div><span class="rl">あなたの復活の呪文</span><span class="rv">${curPw}</span></div>`;
   s+=`<div><span class="rl">相手</span><span class="rv">${oppName}</span></div>`;
   s+=`<div><span class="rl">ターン数</span><span class="rv">${turns}</span></div>`;
   s+=`<div><span class="rl">最大ダメージ</span><span class="rv">${battle.maxDmg}</span></div>`;
   s+=`<div><span class="rl">結果</span><span class="rv" style="color:${won?'var(--g)':'var(--r)'}">${won?'勝利！':'敗北…'}</span></div>`;
   s+=`</div>`;
   document.getElementById('res-body').innerHTML=s;
+  const rsp=document.getElementById('res-sprite');
+  rsp.innerHTML='';
+  const resSp=makePixelSprite(myChar.seed,myChar.cls.c,96);
+  resSp.style.margin='0 auto';
+  rsp.appendChild(resSp);
   go('result');
 }
 
@@ -955,6 +966,87 @@ async function renderRanking(tab){
   }catch(e){el.innerHTML='<div class="empty">よみこみエラー</div>';console.error(e);}
 }
 async function switchTab(tab){await renderRanking(tab);}
+
+// ======================================================
+// ======================================================
+// プロシージャルピクセルアートキャラ生成
+// ======================================================
+function makePixelSprite(seed,clsColor,displayPx){
+  const W=32,H=32,HALF=16;
+  function ph(hex){const h=hex.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+  const[cr,cg,cb]=ph(clsColor);
+  const rv=i=>sr(seed,i);
+  // パレット
+  const darkR=Math.floor(cr*.5),darkG=Math.floor(cg*.5),darkB=Math.floor(cb*.5);
+  const skins=[[230,190,155],[200,155,110],[155,105,75]];
+  const[skR,skG,skB]=skins[Math.floor(rv(100)*3)];
+  const accs=[[255,220,0],[0,200,255],[255,80,80],[80,255,160],[200,80,255]];
+  const[acR,acG,acB]=accs[Math.floor(rv(101)*accs.length)];
+  // halfMap: x=0=キャラ中心, x=15=外端
+  // 値: 0=透明 1=ボディ 2=肌 3=ダーク 4=アクセント
+  const hm=Array.from({length:H},()=>new Uint8Array(HALF));
+  // 形状パラメータ（シード決定）
+  const hHW=4+Math.floor(rv(1)*3);   // 頭半幅 4-6
+  const hH=6+Math.floor(rv(2)*3);    // 頭高 6-8
+  const hTop=1;
+  const bHW=3+Math.floor(rv(10)*3);  // 胴半幅 3-5
+  const bH=7+Math.floor(rv(11)*4);   // 胴高 7-10
+  const bTop=hTop+hH;
+  const aTop=bTop+1;
+  const aH=Math.floor(bH*.7);
+  const lgH=5+Math.floor(rv(31)*3);  // 脚高 5-7
+  const lgTop=Math.min(bTop+bH,H-lgH-1);
+  // 髪
+  const hairH=1+Math.floor(rv(40)*3);
+  const hairSt=Math.floor(rv(41)*3);
+  for(let y=Math.max(0,hTop-hairH);y<hTop;y++) for(let x=0;x<hHW;x++) hm[y][x]=3;
+  if(hairSt===1){
+    if(hTop-hairH-1>=0){hm[hTop-hairH-1][0]=3;if(rv(42)>0.5&&hTop-hairH-2>=0)hm[hTop-hairH-2][0]=3;}
+  }else if(hairSt===2&&hTop-hairH>=0&&hHW<HALF){hm[hTop-hairH][hHW]=3;}
+  // 頭（肌色）
+  for(let y=hTop;y<hTop+hH;y++) for(let x=0;x<hHW;x++) hm[y][x]=2;
+  if(hTop+2<H) hm[hTop+2][2]=4;                             // 目
+  const earY=hTop+Math.floor(hH/2);
+  if(earY<H&&hHW<HALF) hm[earY][hHW]=2;                     // 耳
+  if(hTop+hH-2<H&&rv(50)>0.5) hm[hTop+hH-2][1]=3;          // 口
+  // 胴体
+  for(let y=bTop;y<bTop+bH&&y<H;y++) for(let x=0;x<bHW;x++) hm[y][x]=1;
+  const beltY=bTop+Math.floor(bH/2);
+  if(beltY<H) for(let x=0;x<bHW;x++) hm[beltY][x]=3;       // ベルト
+  if(bTop+2<H&&rv(60)>0.4) hm[bTop+2][0]=4;                // 胸飾り
+  // 腕
+  for(let y=aTop;y<aTop+aH&&y<H;y++) for(let x=bHW;x<bHW+2&&x<HALF;x++) hm[y][x]=1;
+  if(aTop+aH-1<H&&bHW<HALF) hm[aTop+aH-1][bHW]=2;          // 手（肌色）
+  if(rv(70)>0.5){const wpY=aTop+Math.floor(aH/2);if(wpY<H&&bHW+2<HALF){hm[wpY][bHW+2]=3;if(wpY+1<H)hm[wpY+1][bHW+2]=3;}} // 武器
+  // 脚（中心から1ピクセル開けて左右に分離）
+  for(let y=lgTop;y<lgTop+lgH&&y<H;y++) for(let x=1;x<3;x++) hm[y][x]=1;
+  for(let y=lgTop+lgH-2;y<lgTop+lgH&&y<H;y++) for(let x=1;x<4&&x<HALF;x++) hm[y][x]=3; // 足元
+  // マント（確率で追加）
+  if(rv(80)>0.65){const cx=bHW+2;for(let y=bTop;y<bTop+bH&&y<H;y++) if(cx<HALF) hm[y][cx]=1;}
+  // Canvas 生成（32×32、CSS で拡大表示）
+  const canvas=document.createElement('canvas');
+  canvas.width=W;canvas.height=H;
+  canvas.style.cssText=`width:${displayPx}px;height:${displayPx}px;image-rendering:pixelated;image-rendering:-moz-crisp-edges;display:block;`;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  const pal=[null,`rgb(${cr},${cg},${cb})`,`rgb(${skR},${skG},${skB})`,`rgb(${darkR},${darkG},${darkB})`,`rgb(${acR},${acG},${acB})`];
+  for(let y=0;y<H;y++){
+    for(let x=0;x<HALF;x++){
+      const v=hm[y][x];if(!v)continue;
+      ctx.fillStyle=pal[v];
+      ctx.fillRect(HALF-1-x,y,1,1); // 左半分（x=0→col15, x=1→col14, …）
+      ctx.fillRect(HALF+x,  y,1,1); // 右半分（x=0→col16, x=1→col17, …）
+    }
+  }
+  return canvas;
+}
+
+function insertSpriteIntoCard(containerEl,seed,clsColor,displayPx){
+  const sprite=makePixelSprite(seed,clsColor,displayPx);
+  sprite.style.margin='0 auto 6px';
+  const card=containerEl.querySelector('.char-card');
+  if(card) card.insertBefore(sprite,card.firstChild);
+}
 
 // ======================================================
 // URLパラメータ対応 (?pw=○○ で自動キャラ生成)
