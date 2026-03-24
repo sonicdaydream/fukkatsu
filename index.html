@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ふっかつのじゅもん PvP</title>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--c:#000020;--b:#c8c8c8;--y:#ffd700;--a:#a0c0ff;--g:#a0ffa0;--r:#ff6060;--d:#80d0ff}
+body{background:#000014;color:#fff;font-family:'DotGothic16','MS Gothic',monospace;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:8px}
+.screen{display:none;width:100%;max-width:500px}
+.screen.active{display:block}
+.w{border:3px solid var(--b);background:var(--c);padding:10px 14px;margin-bottom:6px;position:relative}
+.w::after{content:'';position:absolute;inset:3px;border:1px solid #333;pointer-events:none}
+.btn{background:transparent;border:2px solid #666;color:#fff;font-family:inherit;font-size:15px;padding:7px 20px;margin:3px;cursor:pointer;letter-spacing:2px}
+.btn:hover:not(:disabled){background:#002060;border-color:var(--a)}
+.btn:disabled{color:#444;cursor:default;border-color:#333}
+.inp{background:#000;border:2px solid #666;color:var(--y);font-family:inherit;font-size:17px;width:100%;padding:7px 10px;letter-spacing:3px;outline:none}
+.inp:focus{border-color:var(--a)}
+@keyframes blink{50%{opacity:0}}
+.blink{animation:blink 1s step-end infinite}
+/* キャラカード */
+.char-card{border:2px solid #304060;padding:8px 10px;background:#000518;margin:4px 0}
+.char-name{font-size:16px;letter-spacing:2px;margin-bottom:4px}
+.char-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;font-size:12px;margin:4px 0}
+.cl{color:var(--a)}
+.cv{float:right;color:#fff}
+.tags{display:flex;flex-wrap:wrap;gap:3px;margin:4px 0}
+.tag{padding:2px 7px;font-size:11px;border:1px solid #304060;background:#001530}
+/* VS画面 */
+.vs-wrap{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:start;margin:6px 0}
+.vs-label{text-align:center;font-size:28px;color:var(--y);align-self:center;text-shadow:0 0 10px #c8a000}
+/* バトル */
+.battle-arena{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
+.fighter-panel{border:2px solid #304060;padding:6px 8px;background:#000518;position:relative}
+.fighter-name{font-size:13px;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hpbar{height:7px;background:#111;border:1px solid #333;margin:3px 0}
+.hpfill{height:100%;transition:width 0.4s}
+.hpfill.hi{background:#00c800}
+.hpfill.md{background:#c8c800}
+.hpfill.lo{background:#c80000}
+.hpnum{font-size:11px;color:var(--g)}
+.hpnum.lo{color:#ffa000}
+.mpnum{font-size:10px;color:#6080c0}
+.party-dots{display:flex;gap:3px;margin-top:4px;flex-wrap:wrap}
+.pdot{width:8px;height:8px;border-radius:50%;background:#304060;border:1px solid #506080}
+.pdot.alive{background:#2060a0;border-color:var(--a)}
+.pdot.dead{background:#200000;border-color:#400}
+.skills-preview{font-size:10px;color:#506070;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* メッセージ */
+.msgbox{min-height:55px;font-size:14px;line-height:1.9;position:relative;cursor:pointer}
+.msgnext{position:absolute;bottom:5px;right:8px;font-size:11px;color:var(--a);animation:blink 0.8s step-end infinite}
+/* コマンド */
+.cmd-area{border:2px solid #304060;padding:6px 8px;background:#000518}
+.cmd-btn{display:block;width:100%;background:transparent;border:none;color:#fff;font-family:inherit;font-size:14px;text-align:left;padding:5px 6px;cursor:pointer;letter-spacing:2px}
+.cmd-btn:hover:not(:disabled){background:#001840;color:var(--a)}
+.cmd-btn:disabled{color:#333;cursor:default}
+.sk-btn{display:block;width:100%;background:transparent;border:none;color:var(--d);font-family:inherit;font-size:12px;text-align:left;padding:4px 6px;cursor:pointer}
+.sk-btn:hover:not(:disabled){background:#001840}
+.sk-btn:disabled{color:#333;cursor:default}
+.sk-mp{font-size:10px;color:#506070;float:right}
+/* ランキング */
+.rtabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}
+.rtab{background:transparent;border:1px solid #333;color:#666;font-family:inherit;font-size:12px;padding:3px 8px;cursor:pointer}
+.rtab.on{background:#001840;border-color:var(--a);color:var(--a)}
+.rankt{font-size:12px;width:100%;border-collapse:collapse}
+.rankt th{color:var(--a);padding:3px 4px;border-bottom:1px solid #304060;text-align:left;font-weight:normal}
+.rankt td{padding:3px 4px;border-bottom:1px solid #1a2030;vertical-align:top}
+.r1{color:var(--y)}
+.r2{color:#c0c0c0}
+.r3{color:#cd7f32}
+/* エフェクト */
+@keyframes shake{0%{transform:translateX(0)}25%{transform:translateX(-7px)}50%{transform:translateX(7px)}75%{transform:translateX(-4px)}100%{transform:translateX(0)}}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-45px)}}
+.shaking{animation:shake 0.3s ease}
+.dfloat{position:absolute;font-family:inherit;pointer-events:none;animation:floatUp 0.9s ease forwards;font-size:18px;font-weight:bold}
+.empty{color:#555;text-align:center;padding:16px;font-size:13px;line-height:1.8}
+.loading{color:#555;text-align:center;padding:12px;font-size:13px}
+/* リザルト */
+.result-win{color:var(--y);font-size:24px;text-align:center;padding:12px 0;letter-spacing:4px;text-shadow:0 0 12px #c8a000}
+.result-lose{color:var(--r);font-size:24px;text-align:center;padding:12px 0;letter-spacing:4px}
+.rstat{font-size:13px;line-height:2.2}
+.rl{color:var(--a)}
+.rv{float:right}
+/* ステータス確認 */
+.hint{font-size:11px;color:#555;line-height:1.7;margin-top:4px}
+/* 登録確認バナー */
+.reg-banner{background:#001830;border:1px solid #304060;padding:6px 10px;font-size:12px;color:#a0c0a0;margin-bottom:6px}
+</style>
+</head>
+<body>
+
+<!-- タイトル -->
+<div id="s-title" class="screen active">
+  <div class="w" style="text-align:center">
+    <div style="font-size:11px;line-height:1.4;padding:16px 4px;color:#c8a000;letter-spacing:1px">
+██████╗ ██╗   ██╗██╗  ██╗██╗  ██╗<br>
+██╔════╝██║   ██║██║ ██╔╝██║ ██╔╝<br>
+█████╗  ██║   ██║█████╔╝ █████╔╝<br>
+██╔══╝  ██║   ██║██╔═██╗ ██╔═██╗<br>
+██║     ╚██████╔╝██║  ██╗██║  ██╗<br>
+╚═╝      ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝</div>
+    <div style="font-size:19px;letter-spacing:5px;color:var(--y);padding:6px 0">ふっかつのじゅもん</div>
+    <div style="font-size:12px;color:#444;margin:4px 0 14px;letter-spacing:2px">対人戦　PvP版</div>
+    <div class="blink" style="font-size:13px;color:var(--a)">スタートを　おしてください</div>
+    <div style="margin-top:14px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
+      <button class="btn" onclick="go('password')" style="color:var(--y)">はじめる</button>
+      <button class="btn" onclick="go('ranking')">ランキング</button>
+    </div>
+  </div>
+  <div style="font-size:11px;color:#333;text-align:center;margin-top:4px">呪文でキャラを生成して　世界中の冒険者と戦おう</div>
+</div>
+
+<!-- パスワード入力 -->
+<div id="s-password" class="screen">
+  <div class="w">
+    <div style="font-size:14px;color:var(--y);letter-spacing:2px;margin-bottom:8px">ふっかつのじゅもん</div>
+    <input id="pw-inp" class="inp" type="text" placeholder="なんでも　どうぞ…" maxlength="60" autocomplete="off" spellcheck="false">
+    <div class="hint">
+      ※ 文字・記号・絵文字、なんでもOK<br>
+      ※ 同じ呪文 ＝ いつも同じ冒険者が召喚される<br>
+      ※ キャラを登録すると　他の人に挑戦される
+    </div>
+  </div>
+  <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+    <button class="btn" onclick="confirmPw()" style="flex:1;color:var(--y)">よびだす</button>
+    <button class="btn" onclick="go('title')" style="color:#666">もどる</button>
+  </div>
+</div>
+
+<!-- キャラ確認＋登録 -->
+<div id="s-mychar" class="screen">
+  <div class="w">
+    <div style="font-size:12px;color:var(--a);margin-bottom:4px">召喚された冒険者</div>
+    <div id="mychar-display"></div>
+  </div>
+  <div class="w" style="padding:8px 12px">
+    <div style="font-size:13px;color:#888;margin-bottom:6px">このキャラの　なまえを　つけて登録しますか？</div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <input id="reg-name" class="inp" type="text" placeholder="冒険者の名前" maxlength="10" style="flex:1;font-size:14px;letter-spacing:2px">
+      <button class="btn" onclick="registerChar()" style="color:var(--g);white-space:nowrap">登録</button>
+    </div>
+    <div class="hint">登録すると　他のプレイヤーから挑戦される（ランキングに載る）</div>
+  </div>
+  <div id="reg-ok" style="display:none" class="reg-banner">✓ 登録済み — 他のプレイヤーから挑戦されています</div>
+  <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+    <button class="btn" onclick="findOpponent()" style="flex:1;color:var(--y)">たたかう！</button>
+    <button class="btn" onclick="go('password')" style="color:#666">やりなおす</button>
+  </div>
+</div>
+
+<!-- 対戦相手確認（VS画面） -->
+<div id="s-vs" class="screen">
+  <div class="w">
+    <div style="font-size:13px;color:var(--a);text-align:center;margin-bottom:8px">対戦相手が　みつかった！</div>
+    <div class="vs-wrap">
+      <div id="vs-my"></div>
+      <div class="vs-label">VS</div>
+      <div id="vs-opp"></div>
+    </div>
+  </div>
+  <div class="w" style="font-size:13px;color:#888">相手のキャラを確認して　戦いに　のぞみますか？</div>
+  <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+    <button class="btn" onclick="startBattle()" style="flex:1;color:var(--y)">たたかう！</button>
+    <button class="btn" onclick="findOpponent()" style="color:#888">別の相手</button>
+    <button class="btn" onclick="go('mychar')" style="color:#555">もどる</button>
+  </div>
+</div>
+
+<!-- バトル -->
+<div id="s-battle" class="screen">
+  <!-- ファイター表示 -->
+  <div class="battle-arena">
+    <div class="fighter-panel" id="fp-my">
+      <div class="fighter-name" id="fn-my"></div>
+      <div class="hpbar"><div class="hpfill hi" id="hpf-my" style="width:100%"></div></div>
+      <div class="hpnum" id="hpn-my"></div>
+      <div class="mpnum" id="mpn-my"></div>
+      <div class="party-dots" id="pd-my"></div>
+      <div class="skills-preview" id="sp-my"></div>
+    </div>
+    <div class="fighter-panel" id="fp-opp">
+      <div class="fighter-name" id="fn-opp"></div>
+      <div class="hpbar"><div class="hpfill hi" id="hpf-opp" style="width:100%"></div></div>
+      <div class="hpnum" id="hpn-opp"></div>
+      <div class="mpnum" id="mpn-opp"></div>
+      <div class="party-dots" id="pd-opp"></div>
+      <div class="skills-preview" id="sp-opp"></div>
+    </div>
+  </div>
+  <!-- メッセージ -->
+  <div class="w msgbox" id="msgbox" onclick="advMsg()">
+    <span id="msg-txt">　</span>
+    <span class="msgnext" id="msgnext" style="display:none">▼</span>
+  </div>
+  <!-- コマンド -->
+  <div class="cmd-area" id="cmd-area">
+    <div id="cmd-list">
+      <button class="cmd-btn" onclick="doAction('atk')">こうげき</button>
+      <button class="cmd-btn" onclick="doAction('skill')">スキル</button>
+      <button class="cmd-btn" onclick="doAction('item')">どうぐ</button>
+      <button class="cmd-btn" onclick="doAction('guard')">ぼうぎょ</button>
+    </div>
+    <div id="sk-list" style="display:none"></div>
+  </div>
+  <div style="font-size:10px;color:#333;text-align:center;margin-top:4px">
+    ターン <span id="tc">1</span> | 最大DM <span id="mxd">0</span>
+  </div>
+</div>
+
+<!-- リザルト -->
+<div id="s-result" class="screen">
+  <div class="w">
+    <div id="res-title"></div>
+    <div id="res-body"></div>
+  </div>
+  <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+    <button class="btn" onclick="findOpponent()" style="flex:1;color:var(--y)">もう一戦！</button>
+    <button class="btn" onclick="go('ranking')">ランキング</button>
+    <button class="btn" onclick="go('password')" style="color:#666">キャラ変更</button>
+  </div>
+</div>
+
+<!-- ランキング -->
+<div id="s-ranking" class="screen">
+  <div class="w">
+    <div style="font-size:15px;letter-spacing:3px;color:var(--y);margin-bottom:8px">冒険者ランキング</div>
+    <div class="rtabs">
+      <button class="rtab on" onclick="switchTab('battles')" id="tab-battles">対戦数</button>
+      <button class="rtab" onclick="switchTab('wins')" id="tab-wins">勝利数</button>
+      <button class="rtab" onclick="switchTab('rate')" id="tab-rate">勝率</button>
+      <button class="rtab" onclick="switchTab('streak')" id="tab-streak">連勝</button>
+    </div>
+    <div id="rank-content"><div class="loading">よみこみ中…</div></div>
+  </div>
+  <div style="margin-top:6px;display:flex;gap:6px">
+    <button class="btn" onclick="go('title')" style="flex:1">タイトル</button>
+    <button class="btn" onclick="go('password')">あそぶ</button>
+  </div>
+</div>
+
+<script>
+// ======================================================
+// データ定義
+// ======================================================
+const CLS=[
+  {n:'とびきり剣士',   aM:1.3,dM:1.0,mM:0.6,c:'#ff8060'},
+  {n:'流浪の魔法使い',  aM:0.7,dM:0.6,mM:1.5,c:'#9090ff'},
+  {n:'無法者ガンナー',  aM:1.2,dM:0.7,mM:0.9,c:'#60d0a0'},
+  {n:'機甲戦士',        aM:0.9,dM:1.6,mM:0.5,c:'#a0a8c0'},
+  {n:'暗殺者',          aM:1.5,dM:0.7,mM:0.8,c:'#c080ff'},
+  {n:'古代の賢者',      aM:0.6,dM:0.8,mM:1.8,c:'#c0a0ff'},
+  {n:'サイバーハッカー',aM:1.0,dM:0.9,mM:1.3,c:'#00d0d0'},
+  {n:'獣使い',          aM:1.1,dM:1.0,mM:1.0,c:'#d0a060'},
+  {n:'海賊',            aM:1.2,dM:0.9,mM:0.7,c:'#60a0d0'},
+  {n:'錬金術師',        aM:0.8,dM:0.8,mM:1.4,c:'#d0b040'},
+  {n:'時空の修道士',    aM:0.7,dM:1.2,mM:1.2,c:'#d0d0a0'},
+  {n:'次元渡り商人',    aM:0.9,dM:0.9,mM:0.9,c:'#ffd700'},
+];
+const WPN=[
+  {n:'さびた銅剣',p:5},{n:'フライパン',p:9},{n:'鉄パイプ',p:11},{n:'竹刀',p:8},
+  {n:'カタナ',p:22},{n:'骨の剣',p:18},{n:'二丁短刀',p:28},{n:'斧グラム',p:30},
+  {n:'大剣カオス',p:35},{n:'炎の剣',p:40},{n:'古代聖剣',p:50},{n:'次元刃',p:55},
+  {n:'コルトM1911',p:20},{n:'AK-47',p:30},{n:'レーザーライフル',p:42},
+  {n:'プラズマキャノン',p:58},{n:'銀河砲',p:70},{n:'宝石の杖',p:18},
+  {n:'雷の杖',p:28},{n:'コズミックワンド',p:50},{n:'ソニックブレード',p:48},
+];
+const ARM=[
+  {n:'ボロ布',d:2},{n:'旅人の革服',d:8},{n:'チェーンメイル',d:15},
+  {n:'フルプレートアーマー',d:28},{n:'ミスリルアーマー',d:38},{n:'ドラゴンスケイル',d:45},
+  {n:'量子防護服',d:50},{n:'ナノスーツ',d:42},{n:'バリアジャケット',d:30},
+  {n:'魔法のローブ',d:18},{n:'聖騎士の鎧',d:40},{n:'サイバネスーツ',d:35},
+  {n:'虚空の衣',d:32},{n:'幻想の鎧',d:48},{n:'ゴーレムの皮',d:20},
+];
+const SKL=[
+  {n:'ポーション投与',c:3,t:'heal',p:50},
+  {n:'ナノ修復',c:7,t:'heal',p:100},
+  {n:'完全蘇生',c:16,t:'healfull',p:0},
+  {n:'仲間を癒す',c:8,t:'healall',p:55},
+  {n:'ファイアボール',c:4,t:'mag',p:55},
+  {n:'サンダークラッシュ',c:6,t:'mag',p:80},
+  {n:'ブラックホール',c:11,t:'mag',p:125},
+  {n:'コズミックレイ',c:13,t:'mag',p:155},
+  {n:'次元崩壊',c:18,t:'mag',p:200},
+  {n:'ラッシュコンボ',c:4,t:'phys',p:90},
+  {n:'スナイパーショット',c:5,t:'phys',p:115},
+  {n:'プラズマバースト',c:8,t:'phys',p:135},
+  {n:'ブレードストーム',c:10,t:'phys',p:165},
+  {n:'オービタルストライク',c:16,t:'phys',p:225},
+  {n:'バリアフィールド',c:5,t:'buff',p:0},
+  {n:'アドレナリン注射',c:4,t:'atkup',p:0},
+  {n:'ハッキング',c:5,t:'debuff',p:0},
+  {n:'ウイルス投下',c:7,t:'poison',p:0},
+  {n:'タイムストップ',c:11,t:'stop',p:0},
+  {n:'召喚メカドラゴン',c:12,t:'summon',p:180},
+  {n:'自己犠牲',c:0,t:'kamikaze',p:0},
+];
+const CMP=[
+  {n:'アンドロイドA-7',hp:180,mp:40,atk:45,def:30,role:'atk'},
+  {n:'ドワーフ鍛冶屋',hp:220,mp:20,atk:35,def:55,role:'def'},
+  {n:'空飛ぶネコ妖精',hp:120,mp:90,atk:20,def:20,role:'heal'},
+  {n:'元軍人サイボーグ',hp:200,mp:30,atk:55,def:35,role:'atk'},
+  {n:'時間旅行者',hp:130,mp:100,atk:25,def:25,role:'mag'},
+  {n:'海賊船の幽霊',hp:160,mp:50,atk:48,def:28,role:'atk'},
+  {n:'AI戦闘機',hp:250,mp:60,atk:50,def:40,role:'atk'},
+  {n:'宇宙人ゾルタ',hp:140,mp:110,atk:22,def:22,role:'mag'},
+  {n:'錬金使い魔',hp:100,mp:120,atk:18,def:18,role:'heal'},
+  {n:'竜騎士の亡霊',hp:180,mp:45,atk:60,def:30,role:'atk'},
+  {n:'量子コンピュータ',hp:150,mp:150,atk:30,def:30,role:'mag'},
+  {n:'砂漠の盗賊王',hp:190,mp:35,atk:52,def:32,role:'atk'},
+  {n:'次元の少女',hp:110,mp:140,atk:15,def:20,role:'mag'},
+  {n:'ゴブリン博士',hp:140,mp:80,atk:28,def:28,role:'sup'},
+  {n:'氷の精霊',hp:130,mp:100,atk:20,def:35,role:'mag'},
+];
+
+// ======================================================
+// シード関数
+// ======================================================
+function hs(s){let h=5381;for(let i=0;i<s.length;i++)h=Math.imul(h,31)+s.charCodeAt(i)|0;return Math.abs(h)||1;}
+function sr(seed,i){let s=(seed+i*2654435761)|0;s=Math.imul(s^(s>>>16),0x45d9f3b)|0;s=Math.imul(s^(s>>>16),0x45d9f3b)|0;s^=(s>>>16);return(s>>>0)/4294967296;}
+function pick(seed,i,a){return a[Math.floor(sr(seed,i)*a.length)];}
+function shuffle(seed,si,arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(sr(seed,si+i)*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+// ======================================================
+// キャラ生成
+// ======================================================
+function genChar(pw){
+  const seed=hs(pw);
+  const r=i=>sr(seed,i);
+  const cls=CLS[Math.floor(r(0)*CLS.length)];
+  const lv=Math.floor(r(1)*55)+1;
+  const mhp=Math.floor(lv*8+r(2)*60+30);
+  const mmp=Math.floor(lv*5+r(3)*40+15);
+  const atk=Math.floor((lv*3+r(4)*28+6)*cls.aM);
+  const def=Math.floor((lv*2+r(5)*18+4)*cls.dM);
+  const mgk=Math.floor((lv*2+r(6)*18+4)*cls.mM);
+  const wpn=WPN[Math.floor(r(8)*WPN.length)];
+  const arm=ARM[Math.floor(r(9)*ARM.length)];
+  const skCount=Math.floor(r(10)*5)+1;
+  const skills=shuffle(seed,20,SKL).slice(0,skCount);
+  const cmpCount=Math.floor(r(30)*4);
+  const party=shuffle(seed,40,CMP).slice(0,cmpCount).map(c=>({...c,hp:c.hp,mp:c.mp,ko:false}));
+  const potions=Math.floor(r(50)*5);
+  return{
+    pw,seed,cls,lv,
+    mhp,hp:mhp,mmp,mp:mmp,
+    atk,def,mgk,wpn,arm,skills,party,potions,
+    ko:false,buffs:{def:false,atk:false,stop:0,poison:false},
+  };
+}
+
+// キャラをシリアライズ（ストレージ用）
+function serChar(c,displayName){
+  return{
+    pw:c.pw,dn:displayName,cls:c.cls.n,clsCol:c.cls.c,
+    lv:c.lv,mhp:c.mhp,mmp:c.mmp,
+    atk:c.atk,def:c.def,mgk:c.mgk,
+    wpn:c.wpn.n,arm:c.arm.n,
+    skills:c.skills.map(s=>s.n),
+    party:c.party.map(p=>p.n),
+    wins:0,losses:0,battles:0,streak:0,maxStreak:0,
+    registeredAt:Date.now(),
+  };
+}
+
+// ======================================================
+// ゲーム状態
+// ======================================================
+let myChar=null,oppChar=null,oppData=null;
+let battle={turn:0,maxDmg:0,phase:'player',mr:null};
+let curPw='',isRegistered=false,myDisplayName='';
+
+// ======================================================
+// 画面遷移
+// ======================================================
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s-'+id).classList.add('active');
+  window.scrollTo(0,0);
+  if(id==='ranking')renderRanking('battles');
+}
+
+// ======================================================
+// パスワード確認
+// ======================================================
+function confirmPw(){
+  const pw=document.getElementById('pw-inp').value.trim();
+  if(!pw){alert('じゅもんを　いれてください');return;}
+  curPw=pw;
+  myChar=genChar(pw);
+  isRegistered=false;
+  renderMyChar();
+  go('mychar');
+}
+document.getElementById('pw-inp').addEventListener('keydown',e=>{if(e.key==='Enter')confirmPw();});
+
+function renderMyChar(){
+  document.getElementById('mychar-display').innerHTML=buildCharCard(myChar,null,false);
+  document.getElementById('reg-ok').style.display='none';
+  document.getElementById('reg-name').value='';
+}
+
+function buildCharCard(c,dn,compact=false){
+  const name=dn||c.cls.n;
+  let s=`<div class="char-card">`;
+  s+=`<div class="char-name" style="color:${c.cls.c}">${name}</div>`;
+  s+=`<div style="font-size:11px;color:#666;margin-bottom:4px">${c.cls.n} / Lv.${c.lv}</div>`;
+  if(!compact){
+    s+=`<div class="char-grid">`;
+    s+=`<div><span class="cl">HP</span><span class="cv">${c.mhp}</span></div>`;
+    s+=`<div><span class="cl">MP</span><span class="cv">${c.mmp}</span></div>`;
+    s+=`<div><span class="cl">攻撃</span><span class="cv">${c.atk}</span></div>`;
+    s+=`<div><span class="cl">魔法</span><span class="cv">${c.mgk}</span></div>`;
+    s+=`<div><span class="cl">守備</span><span class="cv">${c.def}</span></div>`;
+    s+=`<div><span class="cl">仲間</span><span class="cv">${c.party.length}人</span></div>`;
+    s+=`</div>`;
+  }
+  s+=`<div class="tags">`;
+  s+=`<span class="tag" style="color:#ffa060">⚔${c.wpn.n}</span>`;
+  s+=`<span class="tag" style="color:#80ff80">🛡${c.arm.n}</span>`;
+  s+=`</div>`;
+  if(c.skills.length){
+    s+=`<div class="tags">${c.skills.slice(0,4).map(sk=>`<span class="tag" style="color:#80d0ff">${sk.n}</span>`).join('')}${c.skills.length>4?`<span class="tag" style="color:#506070">+${c.skills.length-4}</span>`:''}</div>`;
+  }
+  if(c.party.length){
+    s+=`<div style="font-size:11px;color:#888;margin-top:3px">仲間: ${c.party.map(p=>p.n).join('、')}</div>`;
+  }
+  s+=`</div>`;
+  return s;
+}
+
+// VS画面用ミニカード（シリアライズデータから）
+function buildSerCard(d,side){
+  if(!d)return'<div class="char-card"><div style="color:#555;font-size:12px;padding:8px">???</div></div>';
+  let s=`<div class="char-card">`;
+  s+=`<div class="char-name" style="color:${d.clsCol};font-size:13px">${d.dn}</div>`;
+  s+=`<div style="font-size:10px;color:#666;margin-bottom:3px">${d.cls} Lv.${d.lv}</div>`;
+  s+=`<div style="font-size:11px"><span class="cl">HP</span> ${d.mhp} / <span class="cl">攻</span> ${d.atk}</div>`;
+  s+=`<div class="tags" style="margin-top:3px">`;
+  s+=`<span class="tag" style="color:#ffa060;font-size:10px">${d.wpn}</span>`;
+  s+=`</div>`;
+  if(d.skills.length){
+    s+=`<div style="font-size:10px;color:#80d0ff;margin-top:2px">${d.skills.slice(0,3).join(' / ')}${d.skills.length>3?'…':''}</div>`;
+  }
+  if(d.party.length){
+    s+=`<div style="font-size:10px;color:#888;margin-top:2px">仲間${d.party.length}人</div>`;
+  }
+  s+=`</div>`;
+  return s;
+}
+
+// ======================================================
+// キャラ登録
+// ======================================================
+async function registerChar(){
+  const dn=document.getElementById('reg-name').value.trim();
+  if(!dn){alert('なまえを　いれてください');return;}
+  myDisplayName=dn;
+  const data=serChar(myChar,dn);
+  try{
+    let pool=await loadPool();
+    // 同じPWが既にあれば上書き（ただし勝敗は保持）
+    const existing=pool.find(c=>c.pw===curPw);
+    if(existing){
+      existing.dn=dn;
+      // stale stats: keep
+    }else{
+      pool.push(data);
+    }
+    await savePool(pool);
+    isRegistered=true;
+    document.getElementById('reg-ok').style.display='block';
+  }catch(e){
+    alert('とうろくに　しっぱいしました');console.error(e);
+  }
+}
+
+// ======================================================
+// 対戦相手を探す
+// ======================================================
+async function findOpponent(){
+  if(!myChar){go('password');return;}
+  try{
+    const pool=await loadPool();
+    const candidates=pool.filter(c=>c.pw!==curPw);
+    if(candidates.length===0){
+      // ダミー相手を用意
+      const dummyPws=['test','aaaa','dragon','hello','abc123','sword','magic','hero'];
+      const dp=dummyPws[Math.floor(Math.random()*dummyPws.length)];
+      const dc=genChar(dp);
+      oppData={...serChar(dc,'謎の旅人'),pw:dp};
+      oppChar=dc;
+    }else{
+      oppData=candidates[Math.floor(Math.random()*candidates.length)];
+      oppChar=genChar(oppData.pw);
+      oppChar.displayName=oppData.dn;
+    }
+    // VS画面更新
+    document.getElementById('vs-my').innerHTML=buildCharCard(myChar,myDisplayName||myChar.cls.n,true);
+    document.getElementById('vs-opp').innerHTML=buildSerCard(oppData,'right');
+    go('vs');
+  }catch(e){
+    console.error(e);
+    // フォールバック：ダミー相手
+    const dc=genChar('test');
+    oppChar=dc;oppData={...serChar(dc,'謎の旅人'),pw:'test'};
+    document.getElementById('vs-my').innerHTML=buildCharCard(myChar,myDisplayName||myChar.cls.n,true);
+    document.getElementById('vs-opp').innerHTML=buildSerCard(oppData,'right');
+    go('vs');
+  }
+}
+
+// ======================================================
+// バトル開始
+// ======================================================
+function startBattle(){
+  // HPをリセット
+  myChar=genChar(curPw);
+  oppChar=genChar(oppData.pw);
+  battle={turn:0,maxDmg:0,phase:'player',mr:null};
+  go('battle');
+  updateFighterUI();
+  setMsg(`${oppData.dn||oppData.cls}が　あらわれた！`);
+  disCmd();
+  setTimeout(()=>{showCmd();battle.phase='player';},1200);
+}
+
+// ファイターUI更新
+function updateFighterUI(){
+  const m=myChar,o=oppChar;
+  // 自分
+  document.getElementById('fn-my').textContent=(myDisplayName||m.cls.n)+` [${m.cls.n}]`;
+  updateHpBar('my',m.hp,m.mhp);
+  document.getElementById('hpn-my').textContent=`HP: ${m.hp}/${m.mhp}`;
+  document.getElementById('hpn-my').className='hpnum'+(m.hp/m.mhp<=0.25?' lo':'');
+  document.getElementById('mpn-my').textContent=`MP: ${m.mp}/${m.mmp}`;
+  updatePartyDots('my',m.party);
+  document.getElementById('sp-my').textContent=m.skills.map(s=>s.n).join(' / ');
+  // 相手
+  document.getElementById('fn-opp').textContent=(oppData.dn||oppData.cls)+` [${o.cls.n}]`;
+  updateHpBar('opp',o.hp,o.mhp);
+  document.getElementById('hpn-opp').textContent=`HP: ${o.hp}/${o.mhp}`;
+  document.getElementById('hpn-opp').className='hpnum'+(o.hp/o.mhp<=0.25?' lo':'');
+  document.getElementById('mpn-opp').textContent=`MP: ${o.mp}/${o.mmp}`;
+  updatePartyDots('opp',o.party);
+  document.getElementById('sp-opp').textContent=o.skills.map(s=>s.n).join(' / ');
+}
+function updateHpBar(side,hp,mhp){
+  const pct=Math.max(0,hp/mhp)*100;
+  const el=document.getElementById('hpf-'+side);
+  el.style.width=pct+'%';
+  el.className='hpfill '+(pct<=25?'lo':pct<=50?'md':'hi');
+}
+function updatePartyDots(side,party){
+  const el=document.getElementById('pd-'+side);
+  el.innerHTML=party.map(p=>`<div class="pdot ${p.ko?'dead':'alive'}" title="${p.n}"></div>`).join('');
+}
+
+// ======================================================
+// メッセージキュー
+// ======================================================
+let mq=[],mb=false;
+function setMsg(t){document.getElementById('msg-txt').textContent=t;document.getElementById('msgnext').style.display='none';}
+function qm(t,cl=true){return new Promise(r=>{mq.push({t,cl,r});if(!mb)drainQ();});}
+async function drainQ(){
+  if(mb||!mq.length)return;mb=true;
+  while(mq.length){
+    const{t,cl,r}=mq.shift();setMsg(t);
+    if(cl){document.getElementById('msgnext').style.display='inline';await new Promise(x=>{battle.mr=x;});document.getElementById('msgnext').style.display='none';}
+    else await new Promise(x=>setTimeout(x,700));
+    r();
+  }
+  mb=false;
+}
+function advMsg(){if(battle.mr){const r=battle.mr;battle.mr=null;r();}}
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&battle.mr){e.preventDefault();advMsg();}});
+
+// ======================================================
+// コマンド制御
+// ======================================================
+function disCmd(){document.querySelectorAll('.cmd-btn').forEach(b=>b.disabled=true);}
+function showCmd(){
+  document.getElementById('cmd-list').style.display='block';
+  document.getElementById('sk-list').style.display='none';
+  document.querySelectorAll('.cmd-btn').forEach(b=>b.disabled=false);
+}
+function hideCmd(){
+  document.querySelectorAll('.cmd-btn').forEach(b=>b.disabled=true);
+}
+
+// ======================================================
+// プレイヤーアクション
+// ======================================================
+async function doAction(type){
+  if(battle.phase!=='player')return;
+  if(type==='skill'){
+    if(!myChar.skills.length){await qm('スキルを　しらない…',false);return;}
+    showSkMenu();return;
+  }
+  if(type==='item'){
+    if(!myChar.potions){await qm('どうぐが　ない…',false);return;}
+    hideCmd();battle.phase='acting';await usePotion(myChar);
+    if(oppChar.hp>0)await oppTurn();return;
+  }
+  if(type==='guard'){
+    hideCmd();battle.phase='acting';
+    myChar.buffs.def=true;
+    await qm(`${myChar.cls.n}は　ぼうぎょした！`);
+    await qm('このターンの　ダメージが　半減する！');
+    if(oppChar.hp>0)await oppTurn();return;
+  }
+  if(type==='atk'){
+    hideCmd();battle.phase='acting';
+    await doAtk(myChar,oppChar,true);
+    if(oppChar.hp>0)await oppTurn();
+  }
+}
+
+async function usePotion(c){
+  c.potions--;
+  const h=Math.floor(55+Math.random()*55),a=Math.min(h,c.mhp-c.hp);
+  c.hp=Math.min(c.mhp,c.hp+a);
+  if(c===myChar)floatDmg('my','+'+a,'heal');
+  await qm(`${c.cls.n}は　ポーションをつかった！`);
+  await qm(`HPが　${a}　かいふくした！`);
+  updateFighterUI();
+}
+
+async function doAtk(atker,target,isPlayer){
+  const crit=Math.random()<0.08;
+  const raw=(atker.atk+atker.wpn.p*0.6)*(0.85+Math.random()*0.3);
+  const defMod=(!isPlayer&&target.buffs.def)?2:1;
+  const dmg=Math.max(1,Math.floor(raw-target.def*defMod*0.3));
+  const fin=crit?Math.floor(dmg*1.5):dmg;
+  target.hp=Math.max(0,target.hp-fin);
+  const side=isPlayer?'opp':'my';
+  floatDmg(side,fin,'dmg');
+  shakeFighter(side);
+  if(isPlayer)trackDmg(fin);
+  updateFighterUI();
+  const attName=isPlayer?(myDisplayName||myChar.cls.n):(oppData.dn||oppData.cls);
+  await qm(`${attName}の　${atker.wpn.n}こうげき！`+(crit?' クリティカル！！':''));
+  await qm(`${fin}の　ダメージ！`);
+  if(target.hp<=0){
+    if(isPlayer){await victory();return true;}
+    else{await defeat();return true;}
+  }
+  return false;
+}
+
+// スキルメニュー
+function showSkMenu(){
+  const c=myChar;
+  let s='';
+  c.skills.forEach((sk,i)=>{
+    const ok=sk.t==='kamikaze'||c.mp>=sk.c;
+    s+=`<button class="sk-btn"${ok?'':' disabled'} onclick="useSk(${i})">${sk.n}<span class="sk-mp">${sk.t==='kamikaze'?'---':sk.c+'MP'}</span></button>`;
+  });
+  s+=`<button class="sk-btn" style="color:#555" onclick="showCmd()">◀もどる</button>`;
+  document.getElementById('sk-list').innerHTML=s;
+  document.getElementById('cmd-list').style.display='none';
+  document.getElementById('sk-list').style.display='block';
+}
+
+async function useSk(i){
+  const sk=myChar.skills[i];if(!sk)return;
+  hideCmd();document.getElementById('sk-list').style.display='none';battle.phase='acting';
+  const me=myChar,opp=oppChar;
+  const t=sk.t;
+  const meName=myDisplayName||me.cls.n;
+
+  if(t==='heal'){
+    me.mp=Math.max(0,me.mp-sk.c);
+    const h=Math.floor(sk.p*(0.9+Math.random()*0.2)),a=Math.min(h,me.mhp-me.hp);
+    me.hp=Math.min(me.mhp,me.hp+a);floatDmg('my','+'+a,'heal');
+    await qm(`${meName}は　${sk.n}をつかった！`);await qm(`HPが　${a}　かいふく！`);updateFighterUI();
+  }else if(t==='healfull'){
+    me.mp=Math.max(0,me.mp-sk.c);me.hp=me.mhp;floatDmg('my','FULL','heal');
+    await qm(`${meName}は　${sk.n}をつかった！`);await qm('HPが　全回復した！');updateFighterUI();
+  }else if(t==='healall'){
+    me.mp=Math.max(0,me.mp-sk.c);
+    const all=[me,...me.party.filter(p=>!p.ko)];
+    for(const m of all){const h=Math.floor(sk.p*(0.85+Math.random()*0.3));m.hp=Math.min(m.mhp,m.hp+h);}
+    floatDmg('my','+'+sk.p,'heal');
+    await qm(`${meName}は　${sk.n}をつかった！`);await qm('パーティ全員が　かいふく！');updateFighterUI();
+  }else if(t==='mag'||t==='phys'){
+    me.mp=Math.max(0,me.mp-sk.c);
+    const pow=t==='mag'?me.mgk:me.atk;
+    const raw=sk.p*(0.9+Math.random()*0.2)+pow*0.4;
+    const dmg=Math.max(1,Math.floor(raw-opp.def*0.2));
+    opp.hp=Math.max(0,opp.hp-dmg);
+    floatDmg('opp',dmg,'dmg');shakeFighter('opp');trackDmg(dmg);updateFighterUI();
+    await qm(`${meName}は　${sk.n}をつかった！`);await qm(`${dmg}の　ダメージ！`);
+    if(opp.hp<=0){await victory();return;}
+  }else if(t==='buff'){
+    me.mp=Math.max(0,me.mp-sk.c);me.buffs.def=true;
+    await qm(`${meName}は　${sk.n}をつかった！`);await qm('守備力が　あがった！');
+  }else if(t==='atkup'){
+    me.mp=Math.max(0,me.mp-sk.c);me.buffs.atk=true;
+    await qm(`${meName}は　${sk.n}をつかった！`);await qm('攻撃力が　ぐんと　あがった！');
+  }else if(t==='debuff'){
+    me.mp=Math.max(0,me.mp-sk.c);
+    opp.buffs=opp.buffs||{};opp.buffs.def=true;// 相手の防御バフを相殺
+    await qm(`${meName}は　${sk.n}をつかった！`);await qm('相手の　まもりが　さがった！');
+  }else if(t==='poison'){
+    me.mp=Math.max(0,me.mp-sk.c);me.buffs.poison_to_opp=true;
+    await qm(`${meName}は　${sk.n}をつかった！`);await qm('相手は　どくを　うけた！');
+  }else if(t==='stop'){
+    me.mp=Math.max(0,me.mp-sk.c);opp.buffs.stop=2;
+    await qm(`${meName}は　${sk.n}をつかった！`);await qm('相手の　じかんが　とまった！！');
+  }else if(t==='summon'){
+    me.mp=Math.max(0,me.mp-sk.c);
+    const dmg=Math.floor(sk.p*(0.85+Math.random()*0.3));
+    opp.hp=Math.max(0,opp.hp-dmg);
+    floatDmg('opp',dmg,'dmg');shakeFighter('opp');trackDmg(dmg);updateFighterUI();
+    await qm(`${meName}は　${sk.n}をつかった！`);await qm(`${dmg}の　ダメージ！`);
+    if(opp.hp<=0){await victory();return;}
+  }else if(t==='kamikaze'){
+    await qm(`${meName}は　${sk.n}をつかった！！`);await qm('……');
+    const dmg=Math.floor(opp.hp*(0.4+Math.random()*0.3));
+    opp.hp=Math.max(0,opp.hp-dmg);me.hp=0;me.ko=true;
+    floatDmg('opp',dmg,'dmg');shakeFighter('opp');trackDmg(dmg);updateFighterUI();
+    await qm(`${dmg}の　ダメージ！`);await qm(`${meName}は　たおれた…`);
+    if(opp.hp<=0){await victory();return;}
+    await defeat();return;
+  }
+
+  updateFighterUI();
+  if(opp.hp<=0){await victory();return;}
+  await oppTurn();
+}
+
+// ======================================================
+// 相手ターン（AI）
+// ======================================================
+async function oppTurn(){
+  if(oppChar.hp<=0)return;
+  battle.turn++;document.getElementById('tc').textContent=battle.turn+1;
+  const opp=oppChar,me=myChar;
+  const oppName=oppData.dn||opp.cls.n;
+
+  // バフ効果リセット
+  me.buffs.def=false;
+
+  // ストップ
+  if(opp.buffs&&opp.buffs.stop>0){
+    opp.buffs.stop--;
+    await qm(`${oppName}は　うごけない！`,false);
+    battle.phase='player';showCmd();return;
+  }
+
+  // 毒
+  if(me.buffs.poison_to_opp){
+    const pd=Math.floor(opp.mhp*0.05);
+    opp.hp=Math.max(0,opp.hp-pd);
+    floatDmg('opp',pd,'dmg');updateFighterUI();
+    await qm(`${oppName}は　どくのダメージ！(${pd})`);
+    if(opp.hp<=0){await victory();return;}
+  }
+
+  // AI行動選択
+  const hpPct=opp.hp/opp.mhp;
+  const healSk=opp.skills.find(s=>s.t==='heal'||s.t==='healfull');
+  const atkSk=opp.skills.find(s=>s.t==='mag'||s.t==='phys');
+  const roll=Math.random();
+
+  if(healSk&&opp.mp>=healSk.c&&hpPct<0.35&&roll<0.75){
+    // 回復
+    opp.mp=Math.max(0,opp.mp-healSk.c);
+    const h=healSk.t==='healfull'?opp.mhp-opp.hp:Math.floor(healSk.p*(0.9+Math.random()*0.2));
+    const a=Math.min(h,opp.mhp-opp.hp);
+    opp.hp=Math.min(opp.mhp,opp.hp+a);
+    floatDmg('opp','+'+a,'heal');updateFighterUI();
+    await qm(`${oppName}は　${healSk.n}をつかった！`);await qm(`HPが　${a}　かいふく！`);
+  }else if(atkSk&&opp.mp>=atkSk.c&&roll<0.5){
+    // スキル攻撃
+    opp.mp=Math.max(0,opp.mp-atkSk.c);
+    const pow=atkSk.t==='mag'?opp.mgk:opp.atk;
+    const raw=atkSk.p*(0.9+Math.random()*0.2)+pow*0.4;
+    const def=me.buffs.def?me.def*2:me.def;
+    const dmg=Math.max(1,Math.floor(raw-def*0.2));
+    me.hp=Math.max(0,me.hp-dmg);
+    floatDmg('my',dmg,'dmg');shakeFighter('my');updateFighterUI();
+    await qm(`${oppName}の　${atkSk.n}！`);await qm(`${dmg}の　ダメージ！`);
+    if(me.hp<=0){await defeat();return;}
+  }else if(opp.potions&&hpPct<0.5&&roll<0.6){
+    // ポーション
+    await usePotion(opp);
+  }else{
+    // 通常攻撃
+    const done=await doAtk(opp,me,false);
+    if(done)return;
+  }
+
+  // 仲間の援護
+  for(const p of opp.party){
+    if(p.ko||opp.hp<=0||me.hp<=0)continue;
+    if(p.role==='heal'&&opp.hp/opp.mhp<0.5&&p.mp>=3){
+      const h=Math.floor(50+Math.random()*40);opp.hp=Math.min(opp.mhp,opp.hp+h);
+      p.mp=Math.max(0,p.mp-3);floatDmg('opp','+'+h,'heal');updateFighterUI();
+      await qm(`${p.n}が　かいふくした！(+${h})`);
+    }else if(Math.random()<0.4){
+      const dmg=Math.max(1,Math.floor(p.atk*(0.8+Math.random()*0.4)-(me.buffs.def?me.def*2:me.def)*0.25));
+      me.hp=Math.max(0,me.hp-dmg);
+      floatDmg('my',dmg,'dmg');shakeFighter('my');updateFighterUI();
+      await qm(`${p.n}の　援護攻撃！　${dmg}ダメージ！`);
+      if(me.hp<=0){await defeat();return;}
+    }
+  }
+
+  updateFighterUI();
+  battle.phase='player';showCmd();
+}
+
+// ======================================================
+// 勝利・敗北
+// ======================================================
+async function victory(){
+  battle.phase='gameover';hideCmd();
+  oppChar.hp=0;updateFighterUI();
+  const winName=myDisplayName||myChar.cls.n;
+  const oppName=oppData.dn||oppData.cls;
+  await qm(`${winName}は　かった！！`);
+  await qm(`${oppName}は　たおれた…`);
+  await updateBattleRecord(true);
+  showResult(true);
+}
+
+async function defeat(){
+  battle.phase='gameover';hideCmd();
+  myChar.hp=0;updateFighterUI();
+  const oppName=oppData.dn||oppData.cls;
+  await qm('……　まけた…');
+  await qm(`${oppName}に　やられてしまった。`);
+  await updateBattleRecord(false);
+  showResult(false);
+}
+
+function trackDmg(d){
+  if(d>battle.maxDmg){battle.maxDmg=d;document.getElementById('mxd').textContent=d;}
+}
+
+// ======================================================
+// リザルト表示
+// ======================================================
+function showResult(won){
+  const turns=battle.turn+1;
+  document.getElementById('res-title').innerHTML=won
+    ?'<div class="result-win">かちどき！</div>'
+    :'<div class="result-lose">ゲームオーバー…</div>';
+
+  const oppName=oppData.dn||oppData.cls;
+  let s=`<div class="rstat">`;
+  s+=`<div><span class="rl">あなたの呪文</span><span class="rv">${curPw}</span></div>`;
+  s+=`<div><span class="rl">相手</span><span class="rv">${oppName}</span></div>`;
+  s+=`<div><span class="rl">ターン数</span><span class="rv">${turns}</span></div>`;
+  s+=`<div><span class="rl">最大ダメージ</span><span class="rv">${battle.maxDmg}</span></div>`;
+  s+=`<div><span class="rl">結果</span><span class="rv" style="color:${won?'var(--g)':'var(--r)'}">${won?'勝利！':'敗北…'}</span></div>`;
+  s+=`</div>`;
+  document.getElementById('res-body').innerHTML=s;
+  go('result');
+}
+
+// ======================================================
+// バトル記録の更新
+// ======================================================
+async function updateBattleRecord(myWon){
+  try{
+    const pool=await loadPool();
+    // 自分のキャラを更新
+    const me=pool.find(c=>c.pw===curPw);
+    if(me){
+      me.battles=(me.battles||0)+1;
+      if(myWon){me.wins=(me.wins||0)+1;me.streak=(me.streak||0)+1;me.maxStreak=Math.max(me.maxStreak||0,me.streak);}
+      else{me.losses=(me.losses||0)+1;me.streak=0;}
+    }
+    // 相手のキャラを更新
+    const opp=pool.find(c=>c.pw===oppData.pw);
+    if(opp){
+      opp.battles=(opp.battles||0)+1;
+      if(!myWon){opp.wins=(opp.wins||0)+1;opp.streak=(opp.streak||0)+1;opp.maxStreak=Math.max(opp.maxStreak||0,opp.streak);}
+      else{opp.losses=(opp.losses||0)+1;opp.streak=0;}
+    }
+    await savePool(pool);
+  }catch(e){console.error('record update failed',e);}
+}
+
+// ======================================================
+// エフェクト
+// ======================================================
+function shakeFighter(side){
+  const el=document.getElementById('fp-'+side);
+  el.classList.remove('shaking');void el.offsetWidth;
+  el.classList.add('shaking');
+  setTimeout(()=>el.classList.remove('shaking'),350);
+}
+function floatDmg(side,val,type){
+  const el=document.getElementById('fp-'+side);
+  const df=document.createElement('div');
+  df.className='dfloat';
+  const c=type==='heal'?'#44ff88':type==='dmg'?'#ff5555':'#ffaa00';
+  const sz=type==='dmg'?20:14;
+  df.style.cssText=`color:${c};font-size:${sz}px;left:${20+Math.random()*60}%;top:${10+Math.random()*40}%;z-index:10;`;
+  df.textContent=(type==='heal'?'+':type==='dmg'?'-':'')+val;
+  el.appendChild(df);
+  setTimeout(()=>df.remove(),1000);
+}
+
+// ======================================================
+// ランキング
+// ======================================================
+// ランキング機能は後でFirebaseで実装予定（現在は無効化）
+async function loadPool(){ return []; }
+async function savePool(pool){ return; }
+
+let curTab='battles';
+async function renderRanking(tab){
+  curTab=tab;
+  document.querySelectorAll('.rtab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('tab-'+tab).classList.add('on');
+  const el=document.getElementById('rank-content');
+  el.innerHTML='<div class="loading">よみこみ中…</div>';
+  try{
+    let pool=await loadPool();
+    if(!pool.length){el.innerHTML='<div class="empty">まだ　登録者がいない…<br>あなたが　さいしょに　なろう！</div>';return;}
+    let sorted;
+    if(tab==='battles') sorted=[...pool].sort((a,b)=>(b.battles||0)-(a.battles||0));
+    else if(tab==='wins') sorted=[...pool].sort((a,b)=>(b.wins||0)-(a.wins||0));
+    else if(tab==='rate') sorted=[...pool].filter(c=>(c.battles||0)>=3).sort((a,b)=>{
+      const ra=(a.wins||0)/(a.battles||1),rb=(b.wins||0)/(b.battles||1);return rb-ra;
+    });
+    else sorted=[...pool].sort((a,b)=>(b.maxStreak||0)-(a.maxStreak||0));
+    sorted=sorted.slice(0,15);
+    if(!sorted.length){el.innerHTML='<div class="empty">対象者なし（勝率は3戦以上から）</div>';return;}
+    const col={battles:'対戦数',wins:'勝利数',rate:'勝率',streak:'最大連勝'};
+    let s=`<table class="rankt"><thead><tr><th>#</th><th>名前</th><th>${col[tab]}</th><th>W/L</th><th>呪文</th></tr></thead><tbody>`;
+    sorted.forEach((c,i)=>{
+      const cls=i===0?'r1':i===1?'r2':i===2?'r3':'';
+      let main;
+      if(tab==='battles')main=c.battles||0;
+      else if(tab==='wins')main=c.wins||0;
+      else if(tab==='rate')main=Math.round((c.wins||0)/(c.battles||1)*100)+'%';
+      else main=(c.maxStreak||0)+'連';
+      const wl=`${c.wins||0}/${c.losses||0}`;
+      const pw=c.pw.length>8?c.pw.slice(0,7)+'…':c.pw;
+      s+=`<tr class="${cls}"><td>${i+1}</td><td style="color:${c.clsCol||'#fff'}">${c.dn}</td><td>${main}</td><td style="color:#888">${wl}</td><td style="color:#444;font-size:11px" title="${c.pw}">${pw}</td></tr>`;
+    });
+    s+=`</tbody></table>`;
+    el.innerHTML=s;
+  }catch(e){el.innerHTML='<div class="empty">よみこみエラー</div>';console.error(e);}
+}
+async function switchTab(tab){await renderRanking(tab);}
+</script>
+</body>
+</html>
