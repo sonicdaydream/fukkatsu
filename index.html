@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ふっかつのじゅもん PvP</title>
+<title>VERBUM ANIMA</title>
 <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -94,29 +94,24 @@ body{background:#000014;color:#fff;font-family:'DotGothic16','MS Gothic',monospa
 <!-- タイトル -->
 <div id="s-title" class="screen active">
   <div class="w" style="text-align:center">
-    <div style="font-size:11px;line-height:1.4;padding:16px 4px;color:#c8a000;letter-spacing:1px">
-██████╗ ██╗   ██╗██╗  ██╗██╗  ██╗<br>
-██╔════╝██║   ██║██║ ██╔╝██║ ██╔╝<br>
-█████╗  ██║   ██║█████╔╝ █████╔╝<br>
-██╔══╝  ██║   ██║██╔═██╗ ██╔═██╗<br>
-██║     ╚██████╔╝██║  ██╗██║  ██╗<br>
-╚═╝      ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝</div>
-    <div style="font-size:19px;letter-spacing:5px;color:var(--y);padding:6px 0">ふっかつのじゅもん</div>
-    <div style="font-size:12px;color:#444;margin:4px 0 14px;letter-spacing:2px">対人戦　PvP版</div>
+    <img src="public/logo.png" alt="VERBUM ANIMA" style="width:100%;max-width:320px;margin:10px auto 6px;display:block">
+    <div style="font-size:22px;letter-spacing:6px;color:var(--y);padding:4px 0">VERBUM ANIMA</div>
+    <div style="font-size:12px;color:#888;letter-spacing:3px;margin:2px 0">ウェルブム・アニマ</div>
+    <div style="font-size:11px;color:#556;margin:8px 0 14px;letter-spacing:1px">無意味な文字列など、存在しない</div>
     <div class="blink" style="font-size:13px;color:var(--a)">スタートを　おしてください</div>
     <div style="margin-top:14px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
       <button class="btn" onclick="go('password')" style="color:var(--y)">はじめる</button>
       <button class="btn" onclick="go('ranking')">ランキング</button>
     </div>
   </div>
-  <div style="font-size:11px;color:#333;text-align:center;margin-top:4px">呪文でキャラを生成して　世界中の冒険者と戦おう</div>
+  <div style="font-size:11px;color:#333;text-align:center;margin-top:4px">召還の言葉からキャラを生成して　世界中の旅人と戦おう</div>
 </div>
 
 <!-- パスワード入力 -->
 <div id="s-password" class="screen">
   <div class="w">
-    <div style="font-size:14px;color:var(--y);letter-spacing:2px;margin-bottom:8px">ふっかつのじゅもん</div>
-    <input id="pw-inp" class="inp" type="text" placeholder="なんでも　どうぞ…" maxlength="60" autocomplete="off" spellcheck="false">
+    <div style="font-size:14px;color:var(--y);letter-spacing:2px;margin-bottom:8px">召還の言葉を　ここに…</div>
+    <input id="pw-inp" class="inp" type="text" placeholder="言葉を、ここに…" maxlength="60" autocomplete="off" spellcheck="false">
     <div class="hint">
       ※ 文字・記号・絵文字、なんでもOK<br>
       ※ 同じ呪文 ＝ いつも同じ冒険者が召喚される<br>
@@ -888,7 +883,7 @@ function showResult(won){
   // シェアボタン（勝利時のみ表示）
   const shareBtn=document.getElementById('btn-share');
   if(won){
-    const txt=`「${curPw}」で召喚された${myChar.cls.n}が\n${oppName}を${turns}ターンで撃破！\n最大${battle.maxDmg}ダメージ ⚔️\n\n#ふっかつのじゅもん\nhttps://fukkatsu-ten.vercel.app/?pw=${encodeURIComponent(curPw)}`;
+    const txt=`「${curPw}」で召喚された${myChar.cls.n}が\n${oppName}を${turns}ターンで撃破！\n最大${battle.maxDmg}ダメージ ⚔️\n\n#VerbumAnima\nhttps://fukkatsu-ten.vercel.app/?pw=${encodeURIComponent(curPw)}`;
     shareBtn.href=`https://twitter.com/intent/tweet?text=${encodeURIComponent(txt)}`;
     shareBtn.style.display='inline-block';
   }else{
