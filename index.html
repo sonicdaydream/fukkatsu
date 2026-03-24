@@ -217,6 +217,7 @@ body{background:#000014;color:#fff;font-family:'DotGothic16','MS Gothic',monospa
     <div id="res-body"></div>
   </div>
   <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+    <a id="btn-share" class="btn" target="_blank" rel="noopener noreferrer" style="background:#000;border-color:#444;color:#fff;text-decoration:none;text-align:center;display:none">𝕏 でシェア</a>
     <button class="btn" onclick="findOpponent()" style="flex:1;color:var(--y)">もう一戦！</button>
     <button class="btn" onclick="go('ranking')">ランキング</button>
     <button class="btn" onclick="go('password')" style="color:#666">キャラ変更</button>
@@ -875,6 +876,15 @@ function showResult(won){
   resSp.style.margin='0 auto';
   rsp.appendChild(resSp);
   go('result');
+  // シェアボタン（勝利時のみ表示）
+  const shareBtn=document.getElementById('btn-share');
+  if(won){
+    const txt=`「${curPw}」で召喚された${myChar.cls.n}が\n${oppName}を${turns}ターンで撃破！\n最大${battle.maxDmg}ダメージ ⚔️\n\n#ふっかつのじゅもん\nhttps://fukkatsu-ten.vercel.app/?pw=${encodeURIComponent(curPw)}`;
+    shareBtn.href=`https://twitter.com/intent/tweet?text=${encodeURIComponent(txt)}`;
+    shareBtn.style.display='inline-block';
+  }else{
+    shareBtn.style.display='none';
+  }
 }
 
 // ======================================================
