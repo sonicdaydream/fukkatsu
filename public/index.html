@@ -4,11 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VERBUM ANIMA</title>
-<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--c:#000020;--b:#c8c8c8;--y:#ffd700;--a:#a0c0ff;--g:#a0ffa0;--r:#ff6060;--d:#80d0ff}
-body{background:#000014;color:#fff;font-family:'DotGothic16','MS Gothic',monospace;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:8px}
+body{background:#000014;color:#fff;font-family:'Noto Serif JP','MS Mincho',serif;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:8px}
+.cinzel{font-family:'Cinzel Decorative',serif;letter-spacing:2px}
 .screen{display:none;width:100%;max-width:500px}
 .screen.active{display:block}
 .w{border:3px solid var(--b);background:var(--c);padding:10px 14px;margin-bottom:6px;position:relative}
@@ -87,6 +88,13 @@ body{background:#000014;color:#fff;font-family:'DotGothic16','MS Gothic',monospa
 .hint{font-size:11px;color:#555;line-height:1.7;margin-top:4px}
 /* 登録確認バナー */
 .reg-banner{background:#001830;border:1px solid #304060;padding:6px 10px;font-size:12px;color:#a0c0a0;margin-bottom:6px}
+/* 魔法陣 */
+@keyframes rotateMagic{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.magic-circle-wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:280px;height:280px;pointer-events:none;z-index:0}
+.magic-circle-wrap svg{width:100%;height:100%;animation:rotateMagic 60s linear infinite}
+/* 結果テキスト */
+.result-win,.result-lose{font-family:'Cinzel Decorative',serif}
+.vs-label{font-family:'Cinzel Decorative',serif}
 </style>
 </head>
 <body>
@@ -101,7 +109,7 @@ body{background:#000014;color:#fff;font-family:'DotGothic16','MS Gothic',monospa
     <div class="blink" style="font-size:13px;color:var(--a)">スタートを　おしてください</div>
     <div style="margin-top:14px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
       <button class="btn" onclick="go('password')" style="color:var(--y)">はじめる</button>
-      <button class="btn" onclick="go('ranking')">ランキング</button>
+      <button class="btn" onclick="go('ranking')">召還記録</button>
     </div>
   </div>
   <div style="font-size:11px;color:#333;text-align:center;margin-top:4px">召還の言葉からキャラを生成して　世界中の旅人と戦おう</div>
@@ -109,13 +117,52 @@ body{background:#000014;color:#fff;font-family:'DotGothic16','MS Gothic',monospa
 
 <!-- パスワード入力 -->
 <div id="s-password" class="screen">
-  <div class="w">
+  <div class="w" style="overflow:hidden">
+    <div class="magic-circle-wrap">
+      <svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" opacity="0.11">
+        <g stroke="#c8a000" fill="none">
+          <circle cx="150" cy="150" r="140" stroke-width="1.5"/>
+          <circle cx="150" cy="150" r="112" stroke-width="0.8"/>
+          <circle cx="150" cy="150" r="75"  stroke-width="0.8"/>
+          <circle cx="150" cy="150" r="42"  stroke-width="0.6"/>
+          <!-- 五芒星 -->
+          <path d="M150,20 L26,110 L74,255 L226,255 L274,110 Z" stroke-width="1.2"/>
+          <!-- 外周tick marks (12本) -->
+          <line x1="150" y1="10" x2="150" y2="20" stroke-width="1.5"/>
+          <line x1="220" y1="28" x2="215" y2="37" stroke-width="1.5"/>
+          <line x1="272" y1="80" x2="264" y2="85" stroke-width="1.5"/>
+          <line x1="290" y1="150" x2="280" y2="150" stroke-width="1.5"/>
+          <line x1="272" y1="220" x2="264" y2="215" stroke-width="1.5"/>
+          <line x1="220" y1="272" x2="215" y2="263" stroke-width="1.5"/>
+          <line x1="150" y1="290" x2="150" y2="280" stroke-width="1.5"/>
+          <line x1="80"  y1="272" x2="85"  y2="263" stroke-width="1.5"/>
+          <line x1="28"  y1="220" x2="36"  y2="215" stroke-width="1.5"/>
+          <line x1="10"  y1="150" x2="20"  y2="150" stroke-width="1.5"/>
+          <line x1="28"  y1="80"  x2="36"  y2="85"  stroke-width="1.5"/>
+          <line x1="80"  y1="28"  x2="85"  y2="37"  stroke-width="1.5"/>
+          <!-- 中心十字 -->
+          <line x1="150" y1="108" x2="150" y2="192" stroke-width="0.5"/>
+          <line x1="108" y1="150" x2="192" y2="150" stroke-width="0.5"/>
+          <!-- 斜め線 -->
+          <line x1="120" y1="120" x2="180" y2="180" stroke-width="0.5"/>
+          <line x1="180" y1="120" x2="120" y2="180" stroke-width="0.5"/>
+          <!-- ルーン風小記号 -->
+          <text x="150" y="58"  text-anchor="middle" font-size="10" fill="#c8a000" stroke="none">ᚠ</text>
+          <text x="237" y="105" text-anchor="middle" font-size="10" fill="#c8a000" stroke="none">ᚢ</text>
+          <text x="204" y="260" text-anchor="middle" font-size="10" fill="#c8a000" stroke="none">ᚦ</text>
+          <text x="96"  y="260" text-anchor="middle" font-size="10" fill="#c8a000" stroke="none">ᚨ</text>
+          <text x="63"  y="105" text-anchor="middle" font-size="10" fill="#c8a000" stroke="none">ᚱ</text>
+        </g>
+      </svg>
+    </div>
+    <div style="position:relative;z-index:1">
     <div style="font-size:14px;color:var(--y);letter-spacing:2px;margin-bottom:8px">召還の言葉を　ここに…</div>
     <input id="pw-inp" class="inp" type="text" placeholder="言葉を、ここに…" maxlength="60" autocomplete="off" spellcheck="false">
     <div class="hint">
       ※ 文字・記号・絵文字、なんでもOK<br>
       ※ 同じ呪文 ＝ いつも同じ冒険者が召喚される<br>
       ※ キャラを登録すると　他の人に挑戦される
+    </div>
     </div>
   </div>
   <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
@@ -127,20 +174,20 @@ body{background:#000014;color:#fff;font-family:'DotGothic16','MS Gothic',monospa
 <!-- キャラ確認＋登録 -->
 <div id="s-mychar" class="screen">
   <div class="w">
-    <div style="font-size:12px;color:var(--a);margin-bottom:4px">召喚された冒険者</div>
+    <div style="font-size:12px;color:var(--a);margin-bottom:4px">言葉より顕現した者</div>
     <div id="mychar-display"></div>
   </div>
   <div class="w" style="padding:8px 12px">
     <div style="font-size:13px;color:#888;margin-bottom:6px">このキャラの　なまえを　つけて登録しますか？</div>
     <div style="display:flex;gap:6px;align-items:center">
-      <input id="reg-name" class="inp" type="text" placeholder="冒険者の名前" maxlength="10" style="flex:1;font-size:14px;letter-spacing:2px">
-      <button class="btn" onclick="registerChar()" style="color:var(--g);white-space:nowrap">登録</button>
+      <input id="reg-name" class="inp" type="text" placeholder="名を授けよ" maxlength="10" style="flex:1;font-size:14px;letter-spacing:2px">
+      <button class="btn" onclick="registerChar()" style="color:var(--g);white-space:nowrap">記録に刻む</button>
     </div>
-    <div class="hint">登録すると　他のプレイヤーから挑戦される（ランキングに載る）</div>
+    <div class="hint">記録に刻むと　他の旅人から挑戦される（召還記録に載る）</div>
   </div>
   <div id="reg-ok" style="display:none" class="reg-banner">✓ 登録済み — 他のプレイヤーから挑戦されています</div>
   <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
-    <button class="btn" onclick="findOpponent()" style="flex:1;color:var(--y)">たたかう！</button>
+    <button class="btn" onclick="findOpponent()" style="flex:1;color:var(--y)">儀式を執行する</button>
     <button class="btn" onclick="go('password')" style="color:#666">やりなおす</button>
   </div>
 </div>
@@ -157,7 +204,7 @@ body{background:#000014;color:#fff;font-family:'DotGothic16','MS Gothic',monospa
   </div>
   <div class="w" style="font-size:13px;color:#888">相手のキャラを確認して　戦いに　のぞみますか？</div>
   <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
-    <button class="btn" onclick="startBattle()" style="flex:1;color:var(--y)">たたかう！</button>
+    <button class="btn" onclick="startBattle()" style="flex:1;color:var(--y)">儀式を執行する</button>
     <button class="btn" onclick="findOpponent()" style="color:#888">別の相手</button>
     <button class="btn" onclick="go('mychar')" style="color:#555">もどる</button>
   </div>
@@ -192,10 +239,10 @@ body{background:#000014;color:#fff;font-family:'DotGothic16','MS Gothic',monospa
   <!-- コマンド -->
   <div class="cmd-area" id="cmd-area">
     <div id="cmd-list">
-      <button class="cmd-btn" onclick="doAction('atk')">こうげき</button>
-      <button class="cmd-btn" onclick="doAction('skill')">スキル</button>
-      <button class="cmd-btn" onclick="doAction('item')">どうぐ</button>
-      <button class="cmd-btn" onclick="doAction('guard')">ぼうぎょ</button>
+      <button class="cmd-btn" onclick="doAction('atk')">攻撃</button>
+      <button class="cmd-btn" onclick="doAction('skill')">術式</button>
+      <button class="cmd-btn" onclick="doAction('item')">触媒</button>
+      <button class="cmd-btn" onclick="doAction('guard')">防壁</button>
     </div>
     <div id="sk-list" style="display:none"></div>
   </div>
@@ -213,16 +260,16 @@ body{background:#000014;color:#fff;font-family:'DotGothic16','MS Gothic',monospa
   </div>
   <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
     <a id="btn-share" class="btn" target="_blank" rel="noopener noreferrer" style="background:#000;border-color:#444;color:#fff;text-decoration:none;text-align:center;display:none">𝕏 でシェア</a>
-    <button class="btn" onclick="findOpponent()" style="flex:1;color:var(--y)">もう一戦！</button>
-    <button class="btn" onclick="go('ranking')">ランキング</button>
-    <button class="btn" onclick="go('password')" style="color:#666">キャラ変更</button>
+    <button class="btn" onclick="findOpponent()" style="flex:1;color:var(--y)">再び儀式を</button>
+    <button class="btn" onclick="go('ranking')">召還記録</button>
+    <button class="btn" onclick="go('password')" style="color:#666">言葉を変える</button>
   </div>
 </div>
 
 <!-- ランキング -->
 <div id="s-ranking" class="screen">
   <div class="w">
-    <div style="font-size:15px;letter-spacing:3px;color:var(--y);margin-bottom:8px">冒険者ランキング</div>
+    <div style="font-size:15px;letter-spacing:3px;color:var(--y);margin-bottom:8px" class="cinzel">召還記録</div>
     <div class="rtabs">
       <button class="rtab on" onclick="switchTab('battles')" id="tab-battles">対戦数</button>
       <button class="rtab" onclick="switchTab('wins')" id="tab-wins">勝利数</button>
@@ -424,7 +471,7 @@ function buildCharCard(c,dn,compact=false){
     s+=`<div><span class="cl">攻撃</span><span class="cv">${c.atk}</span></div>`;
     s+=`<div><span class="cl">魔法</span><span class="cv">${c.mgk}</span></div>`;
     s+=`<div><span class="cl">守備</span><span class="cv">${c.def}</span></div>`;
-    s+=`<div><span class="cl">仲間</span><span class="cv">${c.party.length}人</span></div>`;
+    s+=`<div><span class="cl">従者</span><span class="cv">${c.party.length}人</span></div>`;
     s+=`</div>`;
   }
   s+=`<div class="tags">`;
@@ -435,7 +482,7 @@ function buildCharCard(c,dn,compact=false){
     s+=`<div class="tags">${c.skills.slice(0,4).map(sk=>`<span class="tag" style="color:#80d0ff">${sk.n}</span>`).join('')}${c.skills.length>4?`<span class="tag" style="color:#506070">+${c.skills.length-4}</span>`:''}</div>`;
   }
   if(c.party.length){
-    s+=`<div style="font-size:11px;color:#888;margin-top:3px">仲間: ${c.party.map(p=>p.n).join('、')}</div>`;
+    s+=`<div style="font-size:11px;color:#888;margin-top:3px">従者: ${c.party.map(p=>p.n).join('、')}</div>`;
   }
   s+=`</div>`;
   return s;
@@ -455,7 +502,7 @@ function buildSerCard(d,side){
     s+=`<div style="font-size:10px;color:#80d0ff;margin-top:2px">${d.skills.slice(0,3).join(' / ')}${d.skills.length>3?'…':''}</div>`;
   }
   if(d.party.length){
-    s+=`<div style="font-size:10px;color:#888;margin-top:2px">仲間${d.party.length}人</div>`;
+    s+=`<div style="font-size:10px;color:#888;margin-top:2px">従者${d.party.length}人</div>`;
   }
   s+=`</div>`;
   return s;
@@ -610,18 +657,18 @@ function hideCmd(){
 async function doAction(type){
   if(battle.phase!=='player')return;
   if(type==='skill'){
-    if(!myChar.skills.length){await qm('スキルを　しらない…',false);return;}
+    if(!myChar.skills.length){await qm('術式を　しらない…',false);return;}
     showSkMenu();return;
   }
   if(type==='item'){
-    if(!myChar.potions){await qm('どうぐが　ない…',false);return;}
+    if(!myChar.potions){await qm('触媒が　ない…',false);return;}
     hideCmd();battle.phase='acting';await usePotion(myChar);
     if(oppChar.hp>0)await oppTurn();return;
   }
   if(type==='guard'){
     hideCmd();battle.phase='acting';
     myChar.buffs.def=true;
-    await qm(`${myChar.cls.n}は　ぼうぎょした！`);
+    await qm(`${myChar.cls.n}は　防壁を展開した！`);
     await qm('このターンの　ダメージが　半減する！');
     if(oppChar.hp>0)await oppTurn();return;
   }
@@ -862,15 +909,15 @@ function trackDmg(d){
 function showResult(won){
   const turns=battle.turn+1;
   document.getElementById('res-title').innerHTML=won
-    ?'<div class="result-win">かちどき！</div>'
-    :'<div class="result-lose">ゲームオーバー…</div>';
+    ?'<div class="result-win">召還、成功</div>'
+    :'<div class="result-lose">顕現、失敗…</div>';
 
   const oppName=oppData.dn||oppData.cls;
   let s=`<div class="rstat">`;
-  s+=`<div><span class="rl">あなたの復活の呪文</span><span class="rv">${curPw}</span></div>`;
-  s+=`<div><span class="rl">相手</span><span class="rv">${oppName}</span></div>`;
-  s+=`<div><span class="rl">ターン数</span><span class="rv">${turns}</span></div>`;
-  s+=`<div><span class="rl">最大ダメージ</span><span class="rv">${battle.maxDmg}</span></div>`;
+  s+=`<div><span class="rl">あなたの言葉</span><span class="rv">${curPw}</span></div>`;
+  s+=`<div><span class="rl">対峙した存在</span><span class="rv">${oppName}</span></div>`;
+  s+=`<div><span class="rl">儀式の回数</span><span class="rv">${turns}</span></div>`;
+  s+=`<div><span class="rl">最大解放量</span><span class="rv">${battle.maxDmg}</span></div>`;
   s+=`<div><span class="rl">結果</span><span class="rv" style="color:${won?'var(--g)':'var(--r)'}">${won?'勝利！':'敗北…'}</span></div>`;
   s+=`</div>`;
   document.getElementById('res-body').innerHTML=s;
