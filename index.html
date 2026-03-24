@@ -955,6 +955,21 @@ async function renderRanking(tab){
   }catch(e){el.innerHTML='<div class="empty">よみこみエラー</div>';console.error(e);}
 }
 async function switchTab(tab){await renderRanking(tab);}
+
+// ======================================================
+// URLパラメータ対応 (?pw=○○ で自動キャラ生成)
+// ======================================================
+(function(){
+  const params=new URLSearchParams(location.search);
+  const pw=params.get('pw');
+  if(pw){
+    curPw=pw;
+    myChar=genChar(pw);
+    isRegistered=false;
+    renderMyChar();
+    go('mychar');
+  }
+})();
 </script>
 </body>
 </html>
