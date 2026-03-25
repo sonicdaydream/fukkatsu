@@ -90,7 +90,7 @@ body{background:#000014;color:#fff;font-family:'Noto Serif JP','MS Mincho',serif
 .reg-banner{background:#001830;border:1px solid #304060;padding:6px 10px;font-size:12px;color:#a0c0a0;margin-bottom:6px}
 /* 魔法陣 */
 @keyframes rotateMagic{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-.magic-circle-wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(440px,95vw);height:min(440px,95vw);pointer-events:none;z-index:0}
+.magic-circle-wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) perspective(600px) rotateX(35deg);width:min(440px,95vw);height:min(440px,95vw);pointer-events:none;z-index:0}
 .magic-circle-wrap svg{width:100%;height:100%;animation:rotateMagic 60s linear infinite}
 /* 結果テキスト */
 .result-win,.result-lose{font-family:'Cinzel Decorative',serif}
@@ -119,41 +119,74 @@ body{background:#000014;color:#fff;font-family:'Noto Serif JP','MS Mincho',serif
 <div id="s-password" class="screen">
   <div class="w" style="overflow:hidden">
     <div class="magic-circle-wrap">
-      <svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" opacity="0.25">
-        <g stroke="#c8a000" fill="none">
-          <circle cx="150" cy="150" r="140" stroke-width="1.5"/>
-          <circle cx="150" cy="150" r="112" stroke-width="0.8"/>
-          <circle cx="150" cy="150" r="75"  stroke-width="0.8"/>
-          <circle cx="150" cy="150" r="42"  stroke-width="0.6"/>
-          <!-- 五芒星 -->
-          <path d="M150,20 L26,110 L74,255 L226,255 L274,110 Z" stroke-width="1.2"/>
-          <!-- 外周tick marks (12本) -->
-          <line x1="150" y1="10" x2="150" y2="20" stroke-width="1.5"/>
-          <line x1="220" y1="28" x2="215" y2="37" stroke-width="1.5"/>
-          <line x1="272" y1="80" x2="264" y2="85" stroke-width="1.5"/>
-          <line x1="290" y1="150" x2="280" y2="150" stroke-width="1.5"/>
-          <line x1="272" y1="220" x2="264" y2="215" stroke-width="1.5"/>
-          <line x1="220" y1="272" x2="215" y2="263" stroke-width="1.5"/>
-          <line x1="150" y1="290" x2="150" y2="280" stroke-width="1.5"/>
-          <line x1="80"  y1="272" x2="85"  y2="263" stroke-width="1.5"/>
-          <line x1="28"  y1="220" x2="36"  y2="215" stroke-width="1.5"/>
-          <line x1="10"  y1="150" x2="20"  y2="150" stroke-width="1.5"/>
-          <line x1="28"  y1="80"  x2="36"  y2="85"  stroke-width="1.5"/>
-          <line x1="80"  y1="28"  x2="85"  y2="37"  stroke-width="1.5"/>
-          <!-- 中心十字 -->
-          <line x1="150" y1="108" x2="150" y2="192" stroke-width="0.5"/>
-          <line x1="108" y1="150" x2="192" y2="150" stroke-width="0.5"/>
-          <!-- 斜め線 -->
-          <line x1="120" y1="120" x2="180" y2="180" stroke-width="0.5"/>
-          <line x1="180" y1="120" x2="120" y2="180" stroke-width="0.5"/>
-          <!-- ルーン風小記号 -->
-          <text x="150" y="58"  text-anchor="middle" font-size="10" fill="#c8a000" stroke="none">ᚠ</text>
-          <text x="237" y="105" text-anchor="middle" font-size="10" fill="#c8a000" stroke="none">ᚢ</text>
-          <text x="204" y="260" text-anchor="middle" font-size="10" fill="#c8a000" stroke="none">ᚦ</text>
-          <text x="96"  y="260" text-anchor="middle" font-size="10" fill="#c8a000" stroke="none">ᚨ</text>
-          <text x="63"  y="105" text-anchor="middle" font-size="10" fill="#c8a000" stroke="none">ᚱ</text>
-        </g>
-      </svg>
+      <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" opacity="0.3">
+      <defs>
+        <radialGradient id="cg" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="#ffe060" stop-opacity="0.55"/>
+          <stop offset="25%"  stop-color="#c8a000" stop-opacity="0.22"/>
+          <stop offset="100%" stop-color="#c8a000" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="gl" x="-25%" y="-25%" width="150%" height="150%">
+          <feGaussianBlur stdDeviation="2.2" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <!-- ルーンテキスト用パス（同心円） -->
+        <path id="pr1" d="M33,200 a167,167 0 1,1 334,0 a167,167 0 1,1 -334,0"/>
+        <path id="pr2" d="M70,200 a130,130 0 1,1 260,0 a130,130 0 1,1 -260,0"/>
+        <path id="pr3" d="M115,200 a85,85 0 1,1 170,0 a85,85 0 1,1 -170,0"/>
+      </defs>
+      <!-- 中心グロー -->
+      <circle cx="200" cy="200" r="185" fill="url(#cg)"/>
+      <!-- 放射線 12本 (r=28→183) -->
+      <g stroke="#c8a000" stroke-width="0.5" opacity="0.65">
+        <line x1="200" y1="172" x2="200"  y2="17"/>
+        <line x1="214"   y1="175.8" x2="291.5" y2="41.5"/>
+        <line x1="224.2" y1="186"   x2="358.5" y2="108.5"/>
+        <line x1="228"   y1="200"   x2="383"   y2="200"/>
+        <line x1="224.2" y1="214"   x2="358.5" y2="291.5"/>
+        <line x1="214"   y1="224.2" x2="291.5" y2="358.5"/>
+        <line x1="200"   y1="228"   x2="200"   y2="383"/>
+        <line x1="186"   y1="224.2" x2="108.5" y2="358.5"/>
+        <line x1="175.8" y1="214"   x2="41.5"  y2="291.5"/>
+        <line x1="172"   y1="200"   x2="17"    y2="200"/>
+        <line x1="175.8" y1="186"   x2="41.5"  y2="108.5"/>
+        <line x1="186"   y1="175.8" x2="108.5" y2="41.5"/>
+      </g>
+      <!-- 同心円 4重＋中心小円 -->
+      <g stroke="#c8a000" fill="none" filter="url(#gl)">
+        <circle cx="200" cy="200" r="185" stroke-width="1.8"/>
+        <circle cx="200" cy="200" r="150" stroke-width="1"/>
+        <circle cx="200" cy="200" r="110" stroke-width="1"/>
+        <circle cx="200" cy="200" r="65"  stroke-width="0.8"/>
+        <circle cx="200" cy="200" r="25"  stroke-width="1"/>
+      </g>
+      <!-- 六芒星（ダビデの星） r=90 -->
+      <g stroke="#c8a000" fill="none" stroke-width="1.3" filter="url(#gl)">
+        <polygon points="200,110 277.9,245 122.1,245"/>
+        <polygon points="200,290 277.9,155 122.1,155"/>
+      </g>
+      <!-- 外周ティックマーク 12本 -->
+      <g stroke="#c8a000" stroke-width="1.5">
+        <line x1="200"   y1="15"    x2="200"   y2="27"/>
+        <line x1="292.5" y1="39.5"  x2="287.5" y2="48.2"/>
+        <line x1="360.2" y1="107.5" x2="351.5" y2="112.5"/>
+        <line x1="385"   y1="200"   x2="373"   y2="200"/>
+        <line x1="360.2" y1="292.5" x2="351.5" y2="287.5"/>
+        <line x1="292.5" y1="360.5" x2="287.5" y2="351.8"/>
+        <line x1="200"   y1="385"   x2="200"   y2="373"/>
+        <line x1="107.5" y1="360.5" x2="112.5" y2="351.8"/>
+        <line x1="39.8"  y1="292.5" x2="48.5"  y2="287.5"/>
+        <line x1="15"    y1="200"   x2="27"    y2="200"/>
+        <line x1="39.8"  y1="107.5" x2="48.5"  y2="112.5"/>
+        <line x1="107.5" y1="39.5"  x2="112.5" y2="48.2"/>
+      </g>
+      <!-- ルーン文字リング -->
+      <g font-size="9" fill="#c8a000" stroke="none" font-family="serif" opacity="0.9">
+        <text><textPath href="#pr1">ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ·ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ·ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ·ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ·ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ·</textPath></text>
+        <text><textPath href="#pr2">ᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟᚠᚢᚦᚨᚱᚲᚷᚹᚺ·ᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟᚠᚢᚦᚨᚱᚲᚷᚹᚺ·ᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟᚠᚢᚦᚨᚱᚲᚷᚹᚺ·ᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟᚠᚢᚦᚨᚱᚲᚷᚹᚺ·</textPath></text>
+        <text><textPath href="#pr3">ᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃ·ᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃ·ᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃ·</textPath></text>
+      </g>
+    </svg>
     </div>
     <div style="position:relative;z-index:1">
     <div style="font-size:14px;color:var(--y);letter-spacing:2px;margin-bottom:8px">召還の言葉を　ここに…</div>
@@ -427,6 +460,7 @@ function serChar(c,displayName){
 let myChar=null,oppChar=null,oppData=null;
 let battle={turn:0,maxDmg:0,phase:'player',mr:null};
 let curPw='',isRegistered=false,myDisplayName='';
+function esc(s){const d=document.createElement('div');d.textContent=String(s);return d.innerHTML;}
 
 // ======================================================
 // 画面遷移
@@ -914,8 +948,8 @@ function showResult(won){
 
   const oppName=oppData.dn||oppData.cls;
   let s=`<div class="rstat">`;
-  s+=`<div><span class="rl">あなたの言葉</span><span class="rv">${curPw}</span></div>`;
-  s+=`<div><span class="rl">対峙した存在</span><span class="rv">${oppName}</span></div>`;
+  s+=`<div><span class="rl">あなたの言葉</span><span class="rv">${esc(curPw)}</span></div>`;
+  s+=`<div><span class="rl">対峙した存在</span><span class="rv">${esc(oppName)}</span></div>`;
   s+=`<div><span class="rl">儀式の回数</span><span class="rv">${turns}</span></div>`;
   s+=`<div><span class="rl">最大解放量</span><span class="rv">${battle.maxDmg}</span></div>`;
   s+=`<div><span class="rl">結果</span><span class="rv" style="color:${won?'var(--g)':'var(--r)'}">${won?'勝利！':'敗北…'}</span></div>`;
